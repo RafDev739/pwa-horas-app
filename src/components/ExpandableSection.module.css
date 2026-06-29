@@ -1,0 +1,33 @@
+.section {
+  border-left: 3px solid;
+  border-radius: 0 8px 8px 0;
+  background: rgba(255,255,255,0.04);
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 14px;
+  gap: 8px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.chevron {
+  font-size: 11px;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.content {
+  padding: 4px 14px 14px;
+}

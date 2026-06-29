@@ -1,0 +1,140 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+  min-height: 100vh;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--primary-medium-navy);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+
+.topBarLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.topBarRight {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.appName {
+  font-size: 22px;
+  font-weight: 900;
+  color: var(--accent-orange);
+  letter-spacing: 0.02em;
+}
+
+.currentPeriodBadge {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.currentPeriodBadge strong {
+  color: var(--accent-orange);
+}
+
+.iconBtn {
+  font-size: 22px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+.iconBtn:hover { background: rgba(255,255,255,0.08); }
+
+.main {
+  flex: 1;
+  padding: 8px;
+  padding-bottom: 72px;
+  overflow: hidden;
+}
+
+.hint {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  padding: 8px 0 4px;
+}
+
+/* Language toggle — fixed top-right */
+.langToggle {
+  position: fixed;
+  top: 10px;
+  right: 56px;
+  z-index: 50;
+  display: flex;
+  gap: 2px;
+  background: rgba(6,33,52,0.85);
+  backdrop-filter: blur(8px);
+  border-radius: 8px;
+  padding: 3px;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.langBtn {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 5px;
+  color: var(--text-tertiary);
+  transition: background 0.15s, color 0.15s;
+}
+
+.langBtnActive {
+  background: var(--accent-orange);
+  color: white;
+}
+
+/* Bottom navigation bar */
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: var(--primary-medium-navy);
+  border-top: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  z-index: 40;
+}
+
+.navBtn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: var(--text-tertiary);
+  transition: color 0.15s, background 0.15s;
+  border-radius: 0;
+}
+.navBtn:hover { background: rgba(255,255,255,0.05); }
+
+.navBtnActive {
+  color: var(--accent-orange);
+}
+
+.navIcon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.navLabel {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}

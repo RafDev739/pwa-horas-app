@@ -1,0 +1,120 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --primary-dark-navy: #062134;
+  --primary-medium-navy: #0C3C60;
+  --primary-royal-blue: #0D13AB;
+  --primary-medium-blue: #0C499C;
+  --primary-deep-blue: #183D83;
+  --accent-orange: #E98520;
+  --accent-orange-secondary: #F7901E;
+  --accent-light-blue: #1B99E8;
+  --interactive-bright-blue: #116DFF;
+  --favorable-green: #28A745;
+  --unfavorable-red: #DC3545;
+  --characteristics-purple: #6F42C1;
+  --neutral-gray: #959595;
+  --bg-dark: #000000;
+  --text-on-dark: #FFFFFF;
+  --text-secondary: rgba(255,255,255,0.7);
+  --text-tertiary: rgba(255,255,255,0.5);
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: var(--primary-dark-navy);
+  color: var(--text-on-dark);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  background: none;
+  font: inherit;
+  color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Smooth transitions for expandable sections */
+.expand-enter {
+  max-height: 0;
+  overflow: hidden;
+}
+.expand-enter-active {
+  max-height: 2000px;
+  transition: max-height 0.3s ease-out;
+}
+.expand-exit {
+  max-height: 2000px;
+}
+.expand-exit-active {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.25s ease-in;
+}
+
+/* Toggle switch */
+.toggle {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+  flex-shrink: 0;
+}
+.toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  inset: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: 24px;
+  transition: background 0.2s;
+}
+.toggle-slider::before {
+  content: '';
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+.toggle input:checked + .toggle-slider {
+  background: var(--accent-orange);
+}
+.toggle input:checked + .toggle-slider::before {
+  transform: translateX(20px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+}

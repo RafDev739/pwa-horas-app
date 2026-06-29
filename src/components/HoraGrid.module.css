@@ -1,0 +1,88 @@
+.wrapper {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.grid {
+  display: grid;
+  /* 1 time-label col + 7 day cols */
+  grid-template-columns: minmax(90px, auto) repeat(7, 1fr);
+  gap: 4px;
+  min-width: 360px;
+  padding: 4px;
+}
+
+/* sticky top row */
+.cornerCell,
+.dayHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--primary-dark-navy);
+  padding: 6px 4px;
+}
+
+.cornerCell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cornerLabel {
+  font-size: 11px;
+  color: var(--text-tertiary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dayHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(11px, 2.8vw, 14px);
+  font-weight: 700;
+  color: var(--text-secondary);
+  border-radius: 6px;
+  transition: color 0.15s, background 0.15s;
+  min-height: 32px;
+}
+
+.dayHeader:hover {
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+.currentDay {
+  color: var(--accent-orange) !important;
+}
+
+/* sticky left col */
+.timeLabel {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--primary-dark-navy);
+  display: flex;
+  align-items: center;
+  padding: 4px 6px 4px 2px;
+}
+
+.timeLabelText {
+  font-size: clamp(9px, 2vw, 11px);
+  color: var(--text-tertiary);
+  font-weight: 500;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.currentSlot .timeLabelText {
+  color: var(--accent-orange);
+  font-weight: 700;
+}
+
+.cellWrapper {
+  padding: 2px;
+  min-height: 40px;
+}

@@ -1,0 +1,121 @@
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 16px;
+  padding-bottom: 32px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-light-blue);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0;
+  margin-bottom: 16px;
+  transition: opacity 0.15s;
+}
+.backBtn:hover { opacity: 0.8; }
+
+.selectorRow {
+  margin-bottom: 16px;
+}
+
+.selectorLabel {
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.selector {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.selectorBtn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+  transition: background 0.15s, color 0.15s;
+}
+
+.selectorBtnActive {
+  color: white;
+}
+
+.headerCircle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  gap: 4px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+
+.headerLetter {
+  font-size: 40px;
+  font-weight: 800;
+  color: white;
+  line-height: 1;
+}
+
+.starBtn {
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.starBtn:hover { transform: scale(1.2); }
+
+.summary {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 20px;
+  padding: 0 8px;
+}
+
+.activityList {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.categoryHeader {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+
+.bullet {
+  font-size: 13px;
+  color: var(--text-on-dark);
+  padding-left: 4px;
+  line-height: 1.5;
+}
+
+.spacer {
+  height: 4px;
+}
+
+.sectionText {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-on-dark);
+}

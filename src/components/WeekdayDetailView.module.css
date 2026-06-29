@@ -1,0 +1,95 @@
+.container {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--accent-light-blue);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 0;
+  margin-bottom: 12px;
+  transition: opacity 0.15s;
+}
+.backBtn:hover { opacity: 0.8; }
+
+.title {
+  font-size: 24px;
+  font-weight: 800;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.todayBadge {
+  display: inline-block;
+  background: var(--accent-orange);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s;
+}
+.row:hover { background: rgba(255,255,255,0.1); }
+
+.currentRow {
+  background: rgba(233,133,32,0.15) !important;
+  border: 1px solid rgba(233,133,32,0.4);
+}
+
+.timeRange {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.currentRow .timeRange {
+  color: var(--accent-orange);
+  font-weight: 600;
+}
+
+.letterBadge {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+}
+
+.currentLabel {
+  font-size: 11px;
+  color: var(--accent-orange);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
