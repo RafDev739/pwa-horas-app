@@ -25,6 +25,7 @@ All domain knowledge lives in `src/data/`:
 - **`timeSlots.ts`** — two arrays of 7 `TimeSlot` objects: `daylightTimeSlots` and `standardTimeSlots` (offset 1 hour earlier). Slot 6 (G, ~9:34 PM – 1:00 AM) crosses midnight and requires special range logic.
 - **`horaContent.ts`** — full `DetailedHoraContent` for every letter in both languages (`detailedContentEnglish`, `detailedContentSpanish`), plus short `HoraData` summaries (`horaDetailsEnglish`, `horaDetailsSpanish`).
 - **`i18n.ts`** — all UI strings. The `t(lang, key)` function is the single translation call site; `TranslationKey` is a union type that enforces exhaustiveness at compile time. Adding a string requires updating both the union and both `en`/`es` objects.
+- **`activitySearch.ts`** — keyword map (`ACTIVITY_KEYWORDS`) and `searchActivity(category)` for the Ask screen. Maps all 30 `TaskCategory` values to keyword arrays that are matched as case-insensitive substrings against bullet lines in `detailedContentEnglish`. Returns `{ good, bad, mixed, neutral }` arrays of `HoraLetter`. Also exports `CATEGORY_DISPLAY_GROUP`, `CATEGORIES_BY_GROUP`, and `ALL_CATEGORIES` for rendering the category grid. No AI — pure string matching against static data.
 
 ### Runtime calculation
 
@@ -42,15 +43,20 @@ All user preferences are managed by `useSettings` and serialised as a single JSO
 
 ### Routing
 
-Three routes, all in `src/App.tsx`:
+Four routes, all in `src/App.tsx`:
 
 | Route | Component |
 |---|---|
 | `/` | `HoraGrid` — the main 7×7 grid |
+| `/ask` | `AskView` — activity lookup screen |
 | `/period/:letter` | `HoraDetailView` — expandable sections for one period |
 | `/day/:weekday` | `WeekdayDetailView` — all 7 slots for one weekday index (0=Sunday) |
 
-Settings is a modal overlay rendered inside `App`, not a route.
+Settings is a modal overlay rendered inside `App`, not a route. A `BottomNav` component (also in `App.tsx`) renders a fixed two-tab bar (Grid / Ask) only when the pathname is `/` or `/ask`; it is hidden on detail views.
+
+### Ask About Hours screen
+
+`src/components/AskView.tsx` is the activity lookup screen. It shows 30 activity categories (sourced from the existing `TaskCategory` type) in a filterable, group-tabbed tile grid. Tapping a tile calls `searchActivity()` and displays a results panel with colored hour badges grouped as Good / Avoid / Mixed / Not Mentioned. Each badge navigates to `/period/:letter`. The five display groups are `business`, `medical`, `legal`, `travel`, and `other` (defined in `activitySearch.ts` as `AskDisplayGroup`). Keyword matching always runs against English content (`detailedContentEnglish`) regardless of the active language; display names and group labels use the active language via `t()`.
 
 ### Styling
 
