@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { TaskPreferenceRow } from './TaskPreferenceRow';
+import { scheduleTestNotification } from '../services/notificationService';
 import { t } from '../data/i18n';
 import { HORA_LETTERS } from '../types';
 import { periodColors } from '../styles/colors';
@@ -60,6 +61,7 @@ export function SettingsView({
   notifPermission, onRequestNotifPermission,
 }: Props) {
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [testSent, setTestSent] = useState(false);
 
   const toggleGroup = (key: string) =>
     setExpandedGroups((prev) => ({ ...prev, [key]: !prev[key] }));
@@ -87,7 +89,22 @@ export function SettingsView({
             </div>
           )}
           {notifPermission === 'granted' && (
-            <div className={styles.notifGranted}>✓ {t(language, 'notifications_granted')}</div>
+            <div className={styles.notifGranted}>
+              <span>✓ {t(language, 'notifications_granted')}</span>
+              <button
+                className={styles.testNotifBtn}
+                onClick={async () => {
+                  await scheduleTestNotification(language);
+                  setTestSent(true);
+                  setTimeout(() => setTestSent(false), 10_000);
+                }}
+              >
+                {t(language, 'send_test_notification')}
+              </button>
+              {testSent && (
+                <p className={styles.testNotifSent}>{t(language, 'test_notification_sent')}</p>
+              )}
+            </div>
           )}
 
           {/* Language */}

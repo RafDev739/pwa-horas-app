@@ -4,6 +4,8 @@ import { formatTime12Hour } from '../data/timeSlots';
 import { getTimeSlots } from './horaCalculator';
 import type { Settings, HoraLetter } from '../types';
 
+const WORKER_URL = 'https://horas-push.raf2177act.workers.dev';
+
 interface NotifDB extends DBSchema {
   scheduled: {
     key: string;
@@ -38,14 +40,12 @@ export function getPermission(): NotificationPermission | null {
   return Notification.permission;
 }
 
-export async function scheduleNotifications(settings: Settings, lang: 'en' | 'es') {
-  if (Notification.permission !== 'granted') return;
-  const database = await getDB();
-  await database.clear('scheduled');
+type ScheduledNotif = { id: string; title: string; body: string; fireAt: number };
 
+function buildSchedule(settings: Settings, lang: 'en' | 'es'): ScheduledNotif[] {
+  const notifs: ScheduledNotif[] = [];
   const slots = getTimeSlots();
 
-  // Schedule favorite period notifications for each slot × weekday for the next 7 days
   if (settings.favoritePeriods.length > 0) {
     for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
       const targetDate = new Date();
@@ -68,12 +68,11 @@ export async function scheduleNotifications(settings: Settings, lang: 'en' | 'es
           ? `Período ${letter} comienza a las ${timeStr} - ¡uno de tus períodos favoritos!`
           : `Period ${letter} starts at ${timeStr} - one of your favorite periods!`;
 
-        await database.put('scheduled', { id, title, body, fireAt: fireAt.getTime() });
+        notifs.push({ id, title, body, fireAt: fireAt.getTime() });
       }
     }
   }
 
-  // Daily forecast
   if (settings.dailyForecastEnabled) {
     const [fhStr, fmStr] = settings.dailyForecastTime.split(':');
     const fh = parseInt(fhStr, 10);
@@ -88,14 +87,65 @@ export async function scheduleNotifications(settings: Settings, lang: 'en' | 'es
       const body = lang === 'es'
         ? 'Revisa tu app Hora para los períodos óptimos de hoy'
         : "Check your Hora app for today's optimal periods";
-      await database.put('scheduled', { id, title, body, fireAt: fireAt.getTime() });
+      notifs.push({ id, title, body, fireAt: fireAt.getTime() });
     }
   }
 
-  // Store settings for SW periodic sync reference
+  return notifs;
+}
+
+export async function scheduleNotifications(settings: Settings, lang: 'en' | 'es') {
+  if (Notification.permission !== 'granted') return;
+  const schedule = buildSchedule(settings, lang);
+  const database = await getDB();
+  await database.clear('scheduled');
+  for (const notif of schedule) {
+    await database.put('scheduled', notif);
+  }
   try {
     localStorage.setItem('horas_notif_settings', JSON.stringify({ lang, favPeriods: settings.favoritePeriods, reminderMin: settings.favoriteReminderMinutes }));
   } catch { /* ignore */ }
+}
+
+export async function scheduleTestNotification(lang: 'en' | 'es') {
+  if (Notification.permission !== 'granted') return;
+  const database = await getDB();
+  const fireAt = Date.now() + 2 * 60 * 1000;
+  const title = lang === 'es' ? '✅ Horas — Notificación de Prueba' : '✅ Horas — Test Notification';
+  const body  = lang === 'es' ? '¡Las notificaciones están funcionando!' : 'Notifications are working!';
+  await database.put('scheduled', { id: 'test_notif', title, body, fireAt });
+}
+
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+}
+
+export async function subscribeToPush(settings: Settings, lang: 'en' | 'es'): Promise<void> {
+  if (Notification.permission !== 'granted') return;
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY as string).buffer as ArrayBuffer,
+      });
+    }
+
+    const schedule = buildSchedule(settings, lang);
+    await fetch(`${WORKER_URL}/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subscription: sub.toJSON(), notifications: schedule }),
+    });
+  } catch (err) {
+    console.warn('Push subscription failed:', err);
+  }
 }
 
 export async function clearAllNotifications() {
@@ -103,7 +153,6 @@ export async function clearAllNotifications() {
   await database.clear('scheduled');
 }
 
-// Poll for due notifications (called when app is open)
 let pollingId: ReturnType<typeof setInterval> | null = null;
 
 export function startNotificationPolling() {

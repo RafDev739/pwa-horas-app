@@ -13,6 +13,7 @@ import {
   requestPermission,
   getPermission,
   scheduleNotifications,
+  subscribeToPush,
   startNotificationPolling,
   stopNotificationPolling,
 } from './services/notificationService';
@@ -85,11 +86,15 @@ export default function App() {
 
   useEffect(() => {
     scheduleNotifications(settings, language).catch(() => {});
+    subscribeToPush(settings, language).catch(() => {});
   }, [settings, language]);
 
   const handleRequestNotifPermission = async () => {
     const result = await requestPermission();
     setNotifPermission(result);
+    if (result === 'granted') {
+      subscribeToPush(settings, language).catch(() => {});
+    }
   };
 
   const handleLanguageChange = (lang: Language) => {
