@@ -1,5 +1,5 @@
 import { HORA_LETTERS } from '../types';
-import { detailedContentEnglish } from './horaContent';
+import { detailedContentEnglish, detailedContentSpanish } from './horaContent';
 import type { HoraLetter, TaskCategory, TaskGroup } from '../types';
 
 export interface ActivitySearchResult {
@@ -122,6 +122,104 @@ export function searchActivity(category: TaskCategory): ActivitySearchResult {
     else if (inFavorable)             good.push(letter);
     else if (inUnfavorable)           bad.push(letter);
     else                              neutral.push(letter);
+  }
+
+  return { good, bad, mixed, neutral };
+}
+
+const STOP_WORDS = new Set([
+  'i', 'a', 'an', 'the', 'to', 'for', 'my', 'me', 'do', 'be', 'is', 'are',
+  'was', 'have', 'has', 'get', 'go', 'going', 'need', 'want', 'with', 'can',
+  'will', 'am', 'at', 'on', 'in', 'of', 'or', 'and', 'but', 'if', 'so',
+  'it', 'its', 'this', 'that', 'we', 'he', 'she', 'they', 'you', 'your',
+  'our', 'his', 'her', 'up', 'out', 'as', 'by', 'from', 'not', 'no', 'any',
+  'all', 'been', 'had', 'did', 'just', 'some', 'into', 'what', 'how',
+  'when', 'where', 'who', 'which', 'would', 'should', 'could', 'also',
+  'may', 'might', 'must', 'than', 'then', 'them', 'their', 'too', 'very',
+  'el', 'la', 'los', 'las', 'un', 'una', 'de', 'del', 'en', 'que', 'se',
+  'por', 'con', 'al', 'es', 'su', 'son', 'mi', 'yo', 'nos', 'les',
+  'le', 'lo', 'ya', 'si', 'hay', 'ser', 'para', 'pero', 'muy',
+]);
+
+const SYNONYMS: Record<string, string[]> = {
+  'loan':     ['borrow', 'lend', 'credit'],
+  'loans':    ['borrow', 'lend', 'credit'],
+  'debt':     ['collect', 'borrow'],
+  'owe':      ['collect', 'borrow'],
+  'wedding':  ['marriage', 'marry'],
+  'attorney': ['lawyer'],
+  'sue':      ['lawsuit', 'litigation', 'legal'],
+  'suing':    ['lawsuit', 'litigation', 'legal'],
+  'court':    ['lawsuit', 'litigation', 'legal'],
+  'invest':   ['speculation', 'speculate', 'financial'],
+  'doctor':   ['medical', 'medicine', 'therapeutic'],
+  'hospital': ['surgical', 'medical', 'medicine'],
+  'dentist':  ['medical', 'medicine'],
+  'therapy':  ['therapeutic', 'medicine', 'healing'],
+  'move':     ['moving', 'relocation', 'house'],
+  'relocate': ['moving', 'relocation', 'house'],
+  'trip':     ['travel', 'journey', 'trips'],
+  'hire':     ['employees', 'servants', 'collectors'],
+};
+
+function expandTokens(tokens: string[]): string[] {
+  const expanded = new Set(tokens);
+  for (const token of tokens) {
+    const syns = SYNONYMS[token];
+    if (syns) syns.forEach(s => expanded.add(s));
+  }
+  return [...expanded];
+}
+
+export function tokenizeQuery(query: string): string[] {
+  return query
+    .toLowerCase()
+    .split(/[\s\W]+/)
+    .filter(token => token.length >= 3 && !STOP_WORDS.has(token));
+}
+
+function stemToken(token: string): string {
+  const suffixes = ['ically', 'ations', 'tion', 'ical', 'ions', 'ing', 'ery', 'ure', 'ate', 'ion', 'al', 'ed'];
+  for (const suffix of suffixes) {
+    if (token.endsWith(suffix) && token.length - suffix.length >= 4) {
+      return token.slice(0, token.length - suffix.length);
+    }
+  }
+  return token;
+}
+
+function countTokenHits(text: string, tokens: string[]): number {
+  const lower = text.toLowerCase();
+  return tokens.filter(token => {
+    if (lower.includes(token)) return true;
+    const stem = stemToken(token);
+    return stem !== token && lower.includes(stem);
+  }).length;
+}
+
+export function searchByFreeText(query: string, language: import('../types').Language = 'en'): ActivitySearchResult | null {
+  const tokens = expandTokens(tokenizeQuery(query));
+  if (tokens.length === 0) return null;
+
+  const content = language === 'es' ? detailedContentSpanish : detailedContentEnglish;
+
+  const good: HoraLetter[] = [];
+  const bad: HoraLetter[] = [];
+  const mixed: HoraLetter[] = [];
+  const neutral: HoraLetter[] = [];
+
+  for (const letter of HORA_LETTERS) {
+    const c = content[letter];
+    const favText = [c.generalDescription, c.characteristics, ...c.favorableActivities].join(' ');
+    const unfavText = c.unfavorableActivities.join(' ');
+
+    const favHits   = countTokenHits(favText, tokens);
+    const unfavHits = countTokenHits(unfavText, tokens);
+
+    if (favHits > 0 && unfavHits > 0)  mixed.push(letter);
+    else if (favHits > 0)               good.push(letter);
+    else if (unfavHits > 0)             bad.push(letter);
+    else                                neutral.push(letter);
   }
 
   return { good, bad, mixed, neutral };

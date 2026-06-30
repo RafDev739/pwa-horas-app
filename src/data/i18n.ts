@@ -55,7 +55,8 @@ type TranslationKey =
   | 'minutes_before' | 'minutes' | 'period_label'
   | 'ask_screen_title' | 'ask_filter_placeholder' | 'ask_good_hours' | 'ask_bad_hours'
   | 'ask_mixed_hours' | 'ask_neutral_hours' | 'ask_tap_hint'
-  | 'ask_nav_label' | 'grid_nav_label' | 'ask_all_group' | 'other_group';
+  | 'ask_nav_label' | 'grid_nav_label' | 'ask_all_group' | 'other_group'
+  | 'ask_search_placeholder' | 'ask_free_text_results_title' | 'ask_no_content_hint';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -214,6 +215,9 @@ const en: Translations = {
   grid_nav_label: 'Grid',
   ask_all_group: 'All',
   other_group: 'Other',
+  ask_search_placeholder: 'Describe what you\'re planning to do…',
+  ask_free_text_results_title: 'Best hours for your activity',
+  ask_no_content_hint: 'No match found. Try words like "surgery", "contract", or "travel".',
 };
 
 const es: Translations = {
@@ -371,6 +375,9 @@ const es: Translations = {
   grid_nav_label: 'Horario',
   ask_all_group: 'Todos',
   other_group: 'Otros',
+  ask_search_placeholder: 'Describe lo que planeas hacer…',
+  ask_free_text_results_title: 'Mejores horas para tu actividad',
+  ask_no_content_hint: 'Sin resultados. Prueba palabras como "cirugía", "contrato" o "viaje".',
 };
 
 const translations: Record<Language, Translations> = { en, es };

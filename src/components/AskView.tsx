@@ -6,6 +6,7 @@ import {
   CATEGORIES_BY_GROUP,
   CATEGORY_DISPLAY_GROUP,
   searchActivity,
+  searchByFreeText,
   type AskDisplayGroup,
   type ActivitySearchResult,
 } from '../data/activitySearch';
@@ -51,19 +52,17 @@ function HourBadges({ letters, variant }: HourBadgesProps) {
 }
 
 interface ResultsPanelProps {
-  category: TaskCategory;
+  title: string;
+  description?: string;
   result: ActivitySearchResult;
   language: Language;
 }
 
-function ResultsPanel({ category, result, language }: ResultsPanelProps) {
-  const catKey = `${category}_task` as TKey;
-  const descKey = `${category}_desc` as TKey;
-
+function ResultsPanel({ title, description, result, language }: ResultsPanelProps) {
   return (
     <div className={styles.resultsPanel}>
-      <h3 className={styles.resultTitle}>{t(language, catKey)}</h3>
-      <p className={styles.resultDesc}>{t(language, descKey)}</p>
+      <h3 className={styles.resultTitle}>{title}</h3>
+      {description && <p className={styles.resultDesc}>{description}</p>}
 
       {result.good.length > 0 && (
         <div className={styles.resultRow}>
@@ -111,7 +110,7 @@ interface Props {
 
 export function AskView({ language, onOpenSettings }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
-  const [filterText, setFilterText] = useState('');
+  const [askQuery, setAskQuery] = useState('');
   const [activeGroup, setActiveGroup] = useState<AskDisplayGroup | 'all'>('all');
 
   const result = useMemo(
@@ -119,15 +118,20 @@ export function AskView({ language, onOpenSettings }: Props) {
     [selectedCategory]
   );
 
-  const categoriesToShow = useMemo(() => {
-    const base = activeGroup === 'all' ? ALL_CATEGORIES : CATEGORIES_BY_GROUP[activeGroup];
-    if (!filterText.trim()) return base;
-    const lower = filterText.toLowerCase();
-    return base.filter(cat => {
-      const name = t(language, `${cat}_task` as TKey);
-      return name.toLowerCase().includes(lower);
-    });
-  }, [activeGroup, filterText, language]);
+  const isFreetextMode = askQuery.trim().length > 0;
+
+  const freeTextResult = useMemo(
+    () => isFreetextMode ? searchByFreeText(askQuery, language) : null,
+    [askQuery, isFreetextMode, language]
+  );
+
+  const hasFreeTextHits = freeTextResult !== null &&
+    (freeTextResult.good.length + freeTextResult.bad.length + freeTextResult.mixed.length) > 0;
+
+  const categoriesToShow = useMemo(
+    () => activeGroup === 'all' ? ALL_CATEGORIES : CATEGORIES_BY_GROUP[activeGroup],
+    [activeGroup]
+  );
 
   function handleTileClick(cat: TaskCategory) {
     setSelectedCategory(prev => prev === cat ? null : cat);
@@ -146,54 +150,74 @@ export function AskView({ language, onOpenSettings }: Props) {
         <input
           type="text"
           className={styles.filterInput}
-          placeholder={t(language, 'ask_filter_placeholder')}
-          value={filterText}
+          placeholder={t(language, 'ask_search_placeholder')}
+          value={askQuery}
           onChange={e => {
-            setFilterText(e.target.value);
-            if (activeGroup !== 'all') setActiveGroup('all');
+            setAskQuery(e.target.value);
+            setSelectedCategory(null);
           }}
         />
-        <div className={styles.groupTabs}>
-          {ASK_GROUPS.map(group => (
-            <button
-              key={group}
-              className={`${styles.groupTab} ${activeGroup === group ? styles.groupTabActive : ''}`}
-              onClick={() => { setActiveGroup(group); setFilterText(''); }}
-            >
-              {t(language, GROUP_LABEL_KEYS[group])}
-            </button>
-          ))}
-        </div>
+        {!isFreetextMode && (
+          <div className={styles.groupTabs}>
+            {ASK_GROUPS.map(group => (
+              <button
+                key={group}
+                className={`${styles.groupTab} ${activeGroup === group ? styles.groupTabActive : ''}`}
+                onClick={() => setActiveGroup(group)}
+              >
+                {t(language, GROUP_LABEL_KEYS[group])}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       <main className={styles.main}>
-        {selectedCategory && result ? (
-          <ResultsPanel category={selectedCategory} result={result} language={language} />
+        {isFreetextMode ? (
+          hasFreeTextHits ? (
+            <ResultsPanel
+              title={t(language, 'ask_free_text_results_title')}
+              result={freeTextResult!}
+              language={language}
+            />
+          ) : (
+            <p className={styles.hint}>{t(language, 'ask_no_content_hint')}</p>
+          )
         ) : (
-          <p className={styles.hint}>{t(language, 'ask_tap_hint')}</p>
-        )}
+          <>
+            {selectedCategory && result ? (
+              <ResultsPanel
+                title={t(language, `${selectedCategory}_task` as TKey)}
+                description={t(language, `${selectedCategory}_desc` as TKey)}
+                result={result}
+                language={language}
+              />
+            ) : (
+              <p className={styles.hint}>{t(language, 'ask_tap_hint')}</p>
+            )}
 
-        <div className={styles.categoryGrid}>
-          {categoriesToShow.map(cat => {
-            const group = CATEGORY_DISPLAY_GROUP[cat];
-            const isSelected = selectedCategory === cat;
-            return (
-              <button
-                key={cat}
-                className={`${styles.tile} ${isSelected ? styles.tileSelected : ''}`}
-                data-group={group}
-                onClick={() => handleTileClick(cat)}
-              >
-                <span className={styles.tileName}>
-                  {t(language, `${cat}_task` as TKey)}
-                </span>
-              </button>
-            );
-          })}
-          {categoriesToShow.length === 0 && (
-            <p className={styles.noResults}>—</p>
-          )}
-        </div>
+            <div className={styles.categoryGrid}>
+              {categoriesToShow.map(cat => {
+                const isSelected = selectedCategory === cat;
+                return (
+                  <button
+                    key={cat}
+                    className={`${styles.tile} ${isSelected ? styles.tileSelected : ''}`}
+                    data-group={CATEGORY_DISPLAY_GROUP[cat]}
+                    onClick={() => handleTileClick(cat)}
+                  >
+                    <span className={styles.tileName}>
+                      {t(language, `${cat}_task` as TKey)}
+                    </span>
+                  </button>
+                );
+              })}
+              {categoriesToShow.length === 0 && (
+                <p className={styles.noResults}>—</p>
+              )}
+            </div>
+          </>
+        )}
       </main>
     </div>
   );
