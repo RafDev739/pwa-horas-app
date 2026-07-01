@@ -10,6 +10,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
+  padding-top: calc(12px + env(safe-area-inset-top));
   background: var(--primary-medium-navy);
   border-bottom: 1px solid rgba(255,255,255,0.06);
   flex-shrink: 0;
@@ -72,7 +73,7 @@
 /* Language toggle — fixed top-right */
 .langToggle {
   position: fixed;
-  top: 10px;
+  top: calc(10px + env(safe-area-inset-top));
   right: 56px;
   z-index: 50;
   display: flex;
@@ -104,7 +105,8 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 60px;
+  height: calc(60px + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
   background: var(--primary-medium-navy);
   border-top: 1px solid rgba(255,255,255,0.08);
   display: flex;
