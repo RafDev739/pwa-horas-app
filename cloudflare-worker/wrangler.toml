@@ -1,12 +1,15 @@
 name = "horas-push"
 main = "src/index.ts"
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat"]
 workers_dev = true
+
+[vars]
+VAPID_PUBLIC_KEY = "BAeP98a3PyeyF5HT3YHRocd-S1UERsQIBI6XLOzxCLx7jr6tm2eZHbOP2kkfJyNQB0-INYxyukmXcfSQWS9bSlI"
+VAPID_EMAIL = "raf2177act@gmail.com"
 
 [[kv_namespaces]]
 binding = "PUSH_STORE"
 id = "62bd1417d6a54100927a6672468b4c1b"
 
 [triggers]
-crons = ["*/30 * * * *"]
+crons = ["*/5 * * * *"]

@@ -40,7 +40,7 @@ export function getPermission(): NotificationPermission | null {
   return Notification.permission;
 }
 
-type ScheduledNotif = { id: string; title: string; body: string; fireAt: number };
+type ScheduledNotif = { id: string; title: string; body: string; fireAt: number; url?: string };
 
 function buildSchedule(settings: Settings, lang: 'en' | 'es'): ScheduledNotif[] {
   const notifs: ScheduledNotif[] = [];
@@ -68,7 +68,7 @@ function buildSchedule(settings: Settings, lang: 'en' | 'es'): ScheduledNotif[] 
           ? `Período ${letter} comienza a las ${timeStr} - ¡uno de tus períodos favoritos!`
           : `Period ${letter} starts at ${timeStr} - one of your favorite periods!`;
 
-        notifs.push({ id, title, body, fireAt: fireAt.getTime() });
+        notifs.push({ id, title, body, fireAt: fireAt.getTime(), url: `/period/${letter}` });
       }
     }
   }
@@ -123,19 +123,32 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
 }
 
+const VAPID_KEY_STORAGE = 'horas_vapid_pub';
+
 export async function subscribeToPush(settings: Settings, lang: 'en' | 'es'): Promise<void> {
   if (Notification.permission !== 'granted') return;
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
 
+  const currentVapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY as string;
+
   try {
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
+
+    // If the VAPID key changed, the old subscription is invalid — discard it
+    if (sub && localStorage.getItem(VAPID_KEY_STORAGE) !== currentVapidKey) {
+      await sub.unsubscribe();
+      sub = null;
+    }
+
     if (!sub) {
       sub = await reg.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(import.meta.env.VITE_VAPID_PUBLIC_KEY as string).buffer as ArrayBuffer,
+        applicationServerKey: urlBase64ToUint8Array(currentVapidKey).buffer as ArrayBuffer,
       });
     }
+
+    localStorage.setItem(VAPID_KEY_STORAGE, currentVapidKey);
 
     const schedule = buildSchedule(settings, lang);
     await fetch(`${WORKER_URL}/sync`, {

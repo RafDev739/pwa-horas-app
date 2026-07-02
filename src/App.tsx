@@ -5,6 +5,7 @@ import { HoraDetailView } from './components/HoraDetailView';
 import { WeekdayDetailView } from './components/WeekdayDetailView';
 import { SettingsView } from './components/SettingsView';
 import { AskView } from './components/AskView';
+import { NotificationBanner } from './components/NotificationBanner';
 import { useCurrentPeriod } from './hooks/useCurrentPeriod';
 import { useLanguage } from './hooks/useLanguage';
 import { useSettings } from './hooks/useSettings';
@@ -104,6 +105,7 @@ export default function App() {
 
   return (
     <>
+      <NotificationBanner />
       {/* Language toggle */}
       <div className={styles.langToggle}>
         {(['en', 'es'] as Language[]).map((lang) => (
