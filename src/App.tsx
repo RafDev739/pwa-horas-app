@@ -144,6 +144,7 @@ export default function App() {
               settings={settings}
               notifPermission={notifPermission}
               onSetTaskPreference={(cat, pref) => setTaskPreference(cat, pref)}
+              onRequestNotifPermission={handleRequestNotifPermission}
             />
           }
         />

@@ -62,10 +62,10 @@ interface ResultsPanelProps {
   taskPref?: TaskPreference;
   notifPermission?: NotificationPermission | null;
   onSetTaskPreference?: (pref: TaskPreference) => void;
+  onRequestNotifPermission?: () => void;
 }
 
-function ResultsPanel({ title, description, result, language, category, taskPref, notifPermission, onSetTaskPreference }: ResultsPanelProps) {
-  const showNotifControls = !!(category && onSetTaskPreference && notifPermission === 'granted');
+function ResultsPanel({ title, description, result, language, category, taskPref, notifPermission, onSetTaskPreference, onRequestNotifPermission }: ResultsPanelProps) {
   const notifyGood = taskPref?.notifyGood ?? false;
   const notifyBad = taskPref?.notifyBad ?? false;
   const minutesBefore = taskPref?.minutesBefore ?? 10;
@@ -121,39 +121,47 @@ function ResultsPanel({ title, description, result, language, category, taskPref
         </div>
       )}
 
-      {showNotifControls && (result.good.length > 0 || result.bad.length > 0) && (
+      {category && (result.good.length > 0 || result.bad.length > 0) && (
         <div className={styles.notifSection}>
           <div className={styles.notifSectionHeader}>🔔 {t(language, 'ask_notify_section')}</div>
-          <div className={styles.notifToggles}>
-            {result.good.length > 0 && (
-              <button
-                className={`${styles.notifToggleBtn} ${notifyGood ? styles.notifToggleBtnOn : ''}`}
-                onClick={toggleGood}
-              >
-                ✅ {t(language, 'ask_good_hours')}
-              </button>
-            )}
-            {result.bad.length > 0 && (
-              <button
-                className={`${styles.notifToggleBtn} ${notifyBad ? styles.notifToggleBtnOn : ''}`}
-                onClick={toggleBad}
-              >
-                ❌ {t(language, 'ask_bad_hours')}
-              </button>
-            )}
-          </div>
-          {(notifyGood || notifyBad) && (
-            <div className={styles.delayPicker}>
-              {DELAY_OPTIONS.map(m => (
-                <button
-                  key={m}
-                  className={`${styles.delayPill} ${minutesBefore === m ? styles.delayPillActive : ''}`}
-                  onClick={() => setDelay(m)}
-                >
-                  {m} {t(language, 'minutes')}
-                </button>
-              ))}
-            </div>
+          {notifPermission !== 'granted' ? (
+            <button className={styles.notifEnableBtn} onClick={onRequestNotifPermission}>
+              {t(language, 'enable_notifications')}
+            </button>
+          ) : (
+            <>
+              <div className={styles.notifToggles}>
+                {result.good.length > 0 && (
+                  <button
+                    className={`${styles.notifToggleBtn} ${notifyGood ? styles.notifToggleBtnOn : ''}`}
+                    onClick={toggleGood}
+                  >
+                    ✅ {t(language, 'ask_good_hours')}
+                  </button>
+                )}
+                {result.bad.length > 0 && (
+                  <button
+                    className={`${styles.notifToggleBtn} ${notifyBad ? styles.notifToggleBtnOn : ''}`}
+                    onClick={toggleBad}
+                  >
+                    ❌ {t(language, 'ask_bad_hours')}
+                  </button>
+                )}
+              </div>
+              {(notifyGood || notifyBad) && (
+                <div className={styles.delayPicker}>
+                  {DELAY_OPTIONS.map(m => (
+                    <button
+                      key={m}
+                      className={`${styles.delayPill} ${minutesBefore === m ? styles.delayPillActive : ''}`}
+                      onClick={() => setDelay(m)}
+                    >
+                      {m} {t(language, 'minutes')}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -167,9 +175,10 @@ interface Props {
   settings: Settings;
   notifPermission: NotificationPermission | null;
   onSetTaskPreference: (cat: TaskCategory, pref: TaskPreference) => void;
+  onRequestNotifPermission: () => void;
 }
 
-export function AskView({ language, onOpenSettings, settings, notifPermission, onSetTaskPreference }: Props) {
+export function AskView({ language, onOpenSettings, settings, notifPermission, onSetTaskPreference, onRequestNotifPermission }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
   const [askQuery, setAskQuery] = useState('');
   const [activeGroup, setActiveGroup] = useState<AskDisplayGroup | 'all'>('all');
@@ -256,6 +265,7 @@ export function AskView({ language, onOpenSettings, settings, notifPermission, o
                 taskPref={settings.taskPreferences[selectedCategory]}
                 notifPermission={notifPermission}
                 onSetTaskPreference={(pref) => onSetTaskPreference(selectedCategory, pref)}
+                onRequestNotifPermission={onRequestNotifPermission}
               />
             ) : (
               <p className={styles.hint}>{t(language, 'ask_tap_hint')}</p>
