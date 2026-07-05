@@ -137,7 +137,15 @@ export default function App() {
         <Route path="/day/:weekday" element={<WeekdayDetailView language={language} />} />
         <Route
           path="/ask"
-          element={<AskView language={language} onOpenSettings={() => setShowSettings(true)} />}
+          element={
+            <AskView
+              language={language}
+              onOpenSettings={() => setShowSettings(true)}
+              settings={settings}
+              notifPermission={notifPermission}
+              onSetTaskPreference={(cat, pref) => setTaskPreference(cat, pref)}
+            />
+          }
         />
       </Routes>
 

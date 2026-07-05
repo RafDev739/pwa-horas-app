@@ -11,7 +11,7 @@ import {
   type ActivitySearchResult,
 } from '../data/activitySearch';
 import { periodColors } from '../styles/colors';
-import type { Language, TaskCategory, HoraLetter } from '../types';
+import type { Language, TaskCategory, TaskPreference, HoraLetter, Settings } from '../types';
 import styles from './AskView.module.css';
 
 type TKey = Parameters<typeof t>[1];
@@ -51,14 +51,35 @@ function HourBadges({ letters, variant }: HourBadgesProps) {
   );
 }
 
+const DELAY_OPTIONS = [5, 10, 15, 30, 60];
+
 interface ResultsPanelProps {
   title: string;
   description?: string;
   result: ActivitySearchResult;
   language: Language;
+  category?: TaskCategory;
+  taskPref?: TaskPreference;
+  notifPermission?: NotificationPermission | null;
+  onSetTaskPreference?: (pref: TaskPreference) => void;
 }
 
-function ResultsPanel({ title, description, result, language }: ResultsPanelProps) {
+function ResultsPanel({ title, description, result, language, category, taskPref, notifPermission, onSetTaskPreference }: ResultsPanelProps) {
+  const showNotifControls = !!(category && onSetTaskPreference && notifPermission === 'granted');
+  const notifyGood = taskPref?.notifyGood ?? false;
+  const notifyBad = taskPref?.notifyBad ?? false;
+  const minutesBefore = taskPref?.minutesBefore ?? 10;
+
+  function toggleGood() {
+    onSetTaskPreference!({ notifyGood: !notifyGood, notifyBad, minutesBefore });
+  }
+  function toggleBad() {
+    onSetTaskPreference!({ notifyGood, notifyBad: !notifyBad, minutesBefore });
+  }
+  function setDelay(m: number) {
+    onSetTaskPreference!({ notifyGood, notifyBad, minutesBefore: m });
+  }
+
   return (
     <div className={styles.resultsPanel}>
       <h3 className={styles.resultTitle}>{title}</h3>
@@ -99,6 +120,43 @@ function ResultsPanel({ title, description, result, language }: ResultsPanelProp
           <HourBadges letters={result.neutral} variant="neutral" />
         </div>
       )}
+
+      {showNotifControls && (result.good.length > 0 || result.bad.length > 0) && (
+        <div className={styles.notifSection}>
+          <div className={styles.notifSectionHeader}>🔔 {t(language, 'ask_notify_section')}</div>
+          <div className={styles.notifToggles}>
+            {result.good.length > 0 && (
+              <button
+                className={`${styles.notifToggleBtn} ${notifyGood ? styles.notifToggleBtnOn : ''}`}
+                onClick={toggleGood}
+              >
+                ✅ {t(language, 'ask_good_hours')}
+              </button>
+            )}
+            {result.bad.length > 0 && (
+              <button
+                className={`${styles.notifToggleBtn} ${notifyBad ? styles.notifToggleBtnOn : ''}`}
+                onClick={toggleBad}
+              >
+                ❌ {t(language, 'ask_bad_hours')}
+              </button>
+            )}
+          </div>
+          {(notifyGood || notifyBad) && (
+            <div className={styles.delayPicker}>
+              {DELAY_OPTIONS.map(m => (
+                <button
+                  key={m}
+                  className={`${styles.delayPill} ${minutesBefore === m ? styles.delayPillActive : ''}`}
+                  onClick={() => setDelay(m)}
+                >
+                  {m} {t(language, 'minutes')}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -106,9 +164,12 @@ function ResultsPanel({ title, description, result, language }: ResultsPanelProp
 interface Props {
   language: Language;
   onOpenSettings: () => void;
+  settings: Settings;
+  notifPermission: NotificationPermission | null;
+  onSetTaskPreference: (cat: TaskCategory, pref: TaskPreference) => void;
 }
 
-export function AskView({ language, onOpenSettings }: Props) {
+export function AskView({ language, onOpenSettings, settings, notifPermission, onSetTaskPreference }: Props) {
   const [selectedCategory, setSelectedCategory] = useState<TaskCategory | null>(null);
   const [askQuery, setAskQuery] = useState('');
   const [activeGroup, setActiveGroup] = useState<AskDisplayGroup | 'all'>('all');
@@ -191,6 +252,10 @@ export function AskView({ language, onOpenSettings }: Props) {
                 description={t(language, `${selectedCategory}_desc` as TKey)}
                 result={result}
                 language={language}
+                category={selectedCategory}
+                taskPref={settings.taskPreferences[selectedCategory]}
+                notifPermission={notifPermission}
+                onSetTaskPreference={(pref) => onSetTaskPreference(selectedCategory, pref)}
               />
             ) : (
               <p className={styles.hint}>{t(language, 'ask_tap_hint')}</p>

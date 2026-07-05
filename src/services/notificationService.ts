@@ -2,7 +2,8 @@ import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { weeklyGrid } from '../data/grid';
 import { formatTime12Hour } from '../data/timeSlots';
 import { getTimeSlots } from './horaCalculator';
-import type { Settings, HoraLetter } from '../types';
+import { searchActivity } from '../data/activitySearch';
+import type { Settings, HoraLetter, TaskCategory } from '../types';
 
 const WORKER_URL = 'https://horas-push.raf2177act.workers.dev';
 
@@ -68,6 +69,42 @@ function buildSchedule(settings: Settings, lang: 'en' | 'es'): ScheduledNotif[] 
           ? `Período ${letter} comienza a las ${timeStr} - ¡uno de tus períodos favoritos!`
           : `Period ${letter} starts at ${timeStr} - one of your favorite periods!`;
 
+        notifs.push({ id, title, body, fireAt: fireAt.getTime(), url: `/period/${letter}` });
+      }
+    }
+  }
+
+  for (const [cat, pref] of Object.entries(settings.taskPreferences)) {
+    if (!pref || (!pref.notifyGood && !pref.notifyBad)) continue;
+    const { good, bad } = searchActivity(cat as TaskCategory);
+    const letters: { letter: HoraLetter; isGood: boolean }[] = [];
+    if (pref.notifyGood) good.forEach(l => letters.push({ letter: l, isGood: true }));
+    if (pref.notifyBad) bad.forEach(l => letters.push({ letter: l, isGood: false }));
+    if (letters.length === 0) continue;
+
+    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + dayOffset);
+      const dayIdx = targetDate.getDay();
+
+      for (let slotIdx = 0; slotIdx < slots.length; slotIdx++) {
+        const letter = weeklyGrid[slotIdx][dayIdx] as HoraLetter;
+        const match = letters.find(l => l.letter === letter);
+        if (!match) continue;
+
+        const slot = slots[slotIdx];
+        const fireAt = new Date(targetDate);
+        fireAt.setHours(slot.startHour, slot.startMinute - pref.minutesBefore, 0, 0);
+        if (fireAt.getTime() < Date.now()) continue;
+
+        const timeStr = formatTime12Hour(slot.startHour, slot.startMinute);
+        const id = `task_${cat}_${match.isGood ? 'g' : 'b'}_${dayOffset}_${slotIdx}`;
+        const title = match.isGood
+          ? (lang === 'es' ? `✅ Buena hora para tu actividad` : `✅ Good hour for your activity`)
+          : (lang === 'es' ? `⚠️ Hora a evitar` : `⚠️ Hour to avoid`);
+        const body = lang === 'es'
+          ? `Período ${letter} comienza a las ${timeStr}`
+          : `Period ${letter} starts at ${timeStr}`;
         notifs.push({ id, title, body, fireAt: fireAt.getTime(), url: `/period/${letter}` });
       }
     }
