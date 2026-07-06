@@ -1,8 +1,8 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { weeklyGrid } from '../data/grid';
 import { formatTime12Hour } from '../data/timeSlots';
-import { getTimeSlots } from './horaCalculator';
-import { searchActivity } from '../data/activitySearch';
+import { getTimeSlots, getCurrentPeriod } from './horaCalculator';
+import { searchActivity, type ActivitySearchResult } from '../data/activitySearch';
 import type { Settings, HoraLetter, TaskCategory } from '../types';
 
 const WORKER_URL = 'https://horas-push.raf2177act.workers.dev';
@@ -15,6 +15,7 @@ interface NotifDB extends DBSchema {
       title: string;
       body: string;
       fireAt: number;
+      url?: string;
     };
   };
 }
@@ -142,6 +143,43 @@ export async function scheduleNotifications(settings: Settings, lang: 'en' | 'es
   try {
     localStorage.setItem('horas_notif_settings', JSON.stringify({ lang, favPeriods: settings.favoritePeriods, reminderMin: settings.favoriteReminderMinutes }));
   } catch { /* ignore */ }
+}
+
+export async function scheduleNowNotification(
+  category: TaskCategory,
+  activityName: string,
+  result: ActivitySearchResult,
+  lang: 'en' | 'es'
+): Promise<void> {
+  if (Notification.permission !== 'granted') return;
+  const { letter } = getCurrentPeriod();
+  const isGood = result.good.includes(letter);
+  const isBad = result.bad.includes(letter);
+  const isMixed = result.mixed.includes(letter);
+
+  let title: string;
+  if (isGood) {
+    title = lang === 'es' ? `✅ Buena Hora para ${activityName}` : `✅ Good Hour for ${activityName}`;
+  } else if (isBad) {
+    title = lang === 'es' ? `⚠️ Hora a Evitar para ${activityName}` : `⚠️ Hour to Avoid for ${activityName}`;
+  } else if (isMixed) {
+    title = lang === 'es' ? `〜 Hora Mixta para ${activityName}` : `〜 Mixed Hour for ${activityName}`;
+  } else {
+    title = `ℹ️ ${activityName}`;
+  }
+
+  const body = lang === 'es'
+    ? `La Hora ${letter} está activa ahora`
+    : `Hour ${letter} is currently active`;
+
+  const database = await getDB();
+  await database.put('scheduled', {
+    id: `now_${category}`,
+    title,
+    body,
+    fireAt: Date.now() + 2 * 60 * 1000,
+    url: `/period/${letter}`,
+  });
 }
 
 export async function scheduleTestNotification(lang: 'en' | 'es') {

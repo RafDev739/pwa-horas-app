@@ -297,3 +297,24 @@
   color: white;
   border-color: var(--accent-orange);
 }
+
+.nowBtn {
+  width: 100%;
+  margin-top: 0.6rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent-orange);
+  color: #fff;
+  border: none;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.nowBtn:hover:not(:disabled) { opacity: 0.88; }
+.nowBtn:active:not(:disabled) { opacity: 0.75; }
+
+.nowBtnSent {
+  background: #4caf50;
+  cursor: default;
+}

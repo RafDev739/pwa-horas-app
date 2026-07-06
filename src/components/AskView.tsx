@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { t } from '../data/i18n';
+import { scheduleNowNotification } from '../services/notificationService';
 import {
   ALL_CATEGORIES,
   CATEGORIES_BY_GROUP,
@@ -63,12 +64,14 @@ interface ResultsPanelProps {
   notifPermission?: NotificationPermission | null;
   onSetTaskPreference?: (pref: TaskPreference) => void;
   onRequestNotifPermission?: () => void;
+  onNow?: () => void;
 }
 
-function ResultsPanel({ title, description, result, language, category, taskPref, notifPermission, onSetTaskPreference, onRequestNotifPermission }: ResultsPanelProps) {
+function ResultsPanel({ title, description, result, language, category, taskPref, notifPermission, onSetTaskPreference, onRequestNotifPermission, onNow }: ResultsPanelProps) {
   const notifyGood = taskPref?.notifyGood ?? false;
   const notifyBad = taskPref?.notifyBad ?? false;
   const minutesBefore = taskPref?.minutesBefore ?? 10;
+  const [nowSent, setNowSent] = useState(false);
 
   function toggleGood() {
     onSetTaskPreference!({ notifyGood: !notifyGood, notifyBad, minutesBefore });
@@ -161,6 +164,17 @@ function ResultsPanel({ title, description, result, language, category, taskPref
                   ))}
                 </div>
               )}
+              <button
+                className={`${styles.nowBtn} ${nowSent ? styles.nowBtnSent : ''}`}
+                disabled={nowSent}
+                onClick={() => {
+                  onNow?.();
+                  setNowSent(true);
+                  setTimeout(() => setNowSent(false), 3000);
+                }}
+              >
+                {nowSent ? t(language, 'notify_now_sent') : `🔔 ${t(language, 'notify_now')}`}
+              </button>
             </>
           )}
         </div>
@@ -266,6 +280,12 @@ export function AskView({ language, onOpenSettings, settings, notifPermission, o
                 notifPermission={notifPermission}
                 onSetTaskPreference={(pref) => onSetTaskPreference(selectedCategory, pref)}
                 onRequestNotifPermission={onRequestNotifPermission}
+                onNow={() => scheduleNowNotification(
+                  selectedCategory,
+                  t(language, `${selectedCategory}_task` as TKey),
+                  result,
+                  language
+                )}
               />
             ) : (
               <p className={styles.hint}>{t(language, 'ask_tap_hint')}</p>

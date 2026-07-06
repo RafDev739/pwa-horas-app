@@ -57,7 +57,7 @@ type TranslationKey =
   | 'ask_mixed_hours' | 'ask_neutral_hours' | 'ask_tap_hint'
   | 'ask_nav_label' | 'grid_nav_label' | 'ask_all_group' | 'other_group'
   | 'ask_search_placeholder' | 'ask_free_text_results_title' | 'ask_no_content_hint'
-  | 'ask_notify_section';
+  | 'ask_notify_section' | 'notify_now' | 'notify_now_sent';
 
 type Translations = Record<TranslationKey, string>;
 
@@ -220,6 +220,8 @@ const en: Translations = {
   ask_free_text_results_title: 'Best hours for your activity',
   ask_no_content_hint: 'No match found. Try words like "surgery", "contract", or "travel".',
   ask_notify_section: 'Notify me',
+  notify_now: 'Now',
+  notify_now_sent: '✓ In 2 min',
 };
 
 const es: Translations = {
@@ -381,6 +383,8 @@ const es: Translations = {
   ask_free_text_results_title: 'Mejores horas para tu actividad',
   ask_no_content_hint: 'Sin resultados. Prueba palabras como "cirugía", "contrato" o "viaje".',
   ask_notify_section: 'Notificarme',
+  notify_now: 'Ahora',
+  notify_now_sent: '✓ En 2 min',
 };
 
 const translations: Record<Language, Translations> = { en, es };
