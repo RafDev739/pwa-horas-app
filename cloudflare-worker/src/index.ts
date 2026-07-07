@@ -202,16 +202,20 @@ export default {
       const { subscription, notification } = await request.json<{ subscription: StoredSub['subscription']; notification: ScheduledNotif }>();
       const key = 'sub_' + btoa(subscription.endpoint).replace(/[^a-zA-Z0-9]/g, '').slice(-40);
       const raw = await env.PUSH_STORE.get(key);
-      let stored: StoredSub;
-      if (raw) {
-        stored = JSON.parse(raw);
-        // Replace existing notification with same id, or append
-        const others = stored.notifications.filter((n) => n.id !== notification.id);
-        stored = { ...stored, notifications: [...others, notification] };
-      } else {
-        stored = { subscription, notifications: [notification] };
+      // Reject if not previously registered via /sync, or if endpoint/keys don't match stored record.
+      // The p256dh and auth keys are only known to the originating browser, so this guards against
+      // notification injection by callers who only know the push endpoint URL.
+      if (!raw) return new Response('Forbidden', { status: 403, headers: CORS });
+      const stored: StoredSub = JSON.parse(raw);
+      if (
+        stored.subscription.endpoint !== subscription.endpoint ||
+        stored.subscription.keys.auth !== subscription.keys.auth ||
+        stored.subscription.keys.p256dh !== subscription.keys.p256dh
+      ) {
+        return new Response('Forbidden', { status: 403, headers: CORS });
       }
-      await env.PUSH_STORE.put(key, JSON.stringify(stored));
+      const others = stored.notifications.filter((n) => n.id !== notification.id);
+      await env.PUSH_STORE.put(key, JSON.stringify({ ...stored, notifications: [...others, notification] }));
       return new Response('OK', { status: 200, headers: CORS });
     }
 
