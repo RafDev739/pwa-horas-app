@@ -172,14 +172,33 @@ export async function scheduleNowNotification(
     ? `La Hora ${letter} está activa ahora`
     : `Hour ${letter} is currently active`;
 
-  const database = await getDB();
-  await database.put('scheduled', {
+  const notif: ScheduledNotif = {
     id: `now_${category}`,
     title,
     body,
     fireAt: Date.now() + 2 * 60 * 1000,
     url: `/period/${letter}`,
-  });
+  };
+
+  const database = await getDB();
+  await database.put('scheduled', notif);
+
+  // Also sync to worker so the notification fires even if the app is closed
+  try {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        await fetch(`${WORKER_URL}/schedule-now`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subscription: sub.toJSON(), notification: notif }),
+        });
+      }
+    }
+  } catch {
+    // Background delivery unavailable — foreground polling will still fire it
+  }
 }
 
 export async function scheduleTestNotification(lang: 'en' | 'es') {

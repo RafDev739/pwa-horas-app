@@ -198,6 +198,23 @@ export default {
       return new Response('OK', { status: 200, headers: CORS });
     }
 
+    if (url.pathname === '/schedule-now' && request.method === 'POST') {
+      const { subscription, notification } = await request.json<{ subscription: StoredSub['subscription']; notification: ScheduledNotif }>();
+      const key = 'sub_' + btoa(subscription.endpoint).replace(/[^a-zA-Z0-9]/g, '').slice(-40);
+      const raw = await env.PUSH_STORE.get(key);
+      let stored: StoredSub;
+      if (raw) {
+        stored = JSON.parse(raw);
+        // Replace existing notification with same id, or append
+        const others = stored.notifications.filter((n) => n.id !== notification.id);
+        stored = { ...stored, notifications: [...others, notification] };
+      } else {
+        stored = { subscription, notifications: [notification] };
+      }
+      await env.PUSH_STORE.put(key, JSON.stringify(stored));
+      return new Response('OK', { status: 200, headers: CORS });
+    }
+
     if (url.pathname === '/test' && request.method === 'POST') {
       if (request.headers.get('Authorization') !== `Bearer ${env.ADMIN_TOKEN}`) {
         return new Response('Unauthorized', { status: 401 });
