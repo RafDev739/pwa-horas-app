@@ -214,8 +214,13 @@ export default {
       ) {
         return new Response('Forbidden', { status: 403, headers: CORS });
       }
+      // Reject non-relative or protocol-relative URLs in the notification payload
+      if (notification.url && !(notification.url.startsWith('/') && !notification.url.startsWith('//'))) {
+        return new Response('Bad Request', { status: 400, headers: CORS });
+      }
       const others = stored.notifications.filter((n) => n.id !== notification.id);
-      await env.PUSH_STORE.put(key, JSON.stringify({ ...stored, notifications: [...others, notification] }));
+      const updated = [...others, notification].slice(-100); // cap per-subscription storage
+      await env.PUSH_STORE.put(key, JSON.stringify({ ...stored, notifications: updated }));
       return new Response('OK', { status: 200, headers: CORS });
     }
 
