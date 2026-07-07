@@ -252,7 +252,7 @@ export default {
 
   async scheduled(_event: ScheduledEvent, env: Env, _ctx: ExecutionContext): Promise<void> {
     const now = Date.now();
-    const window30min = 5 * 60 * 1000;
+    const window30min = 1 * 60 * 1000;
     const list = await env.PUSH_STORE.list({ prefix: 'sub_' });
 
     for (const { name } of list.keys) {

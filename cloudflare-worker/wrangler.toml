@@ -12,4 +12,4 @@ binding = "PUSH_STORE"
 id = "62bd1417d6a54100927a6672468b4c1b"
 
 [triggers]
-crons = ["*/5 * * * *"]
+crons = ["* * * * *"]
