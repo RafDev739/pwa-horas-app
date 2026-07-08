@@ -71,6 +71,7 @@ export interface Settings {
   dailyForecastEnabled: boolean;
   dailyForecastTime: string;
   taskPreferences: Partial<Record<TaskCategory, TaskPreference>>;
+  theme: 'dark' | 'light';
 }
 
 export interface CurrentPeriod {

@@ -10,6 +10,7 @@ const defaultSettings: Settings = {
   dailyForecastEnabled: false,
   dailyForecastTime: '07:00',
   taskPreferences: {},
+  theme: 'dark',
 };
 
 function load(): Settings {

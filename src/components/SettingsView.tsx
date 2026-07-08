@@ -123,6 +123,24 @@ export function SettingsView({
             </div>
           </section>
 
+          {/* Appearance */}
+          <section className={styles.section}>
+            <h3 className={styles.sectionTitle}>{t(language, 'theme_setting')}</h3>
+            <div className={styles.settingRow}>
+              <span className={styles.sectionDesc}>
+                {(settings.theme ?? 'dark') === 'light' ? t(language, 'theme_light') : t(language, 'theme_dark')}
+              </span>
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={(settings.theme ?? 'dark') === 'light'}
+                  onChange={e => onSetSettings({ ...settings, theme: e.target.checked ? 'light' : 'dark' })}
+                />
+                <span className="toggle-slider" />
+              </label>
+            </div>
+          </section>
+
           {/* Favorite periods */}
           <section className={styles.section}>
             <h3 className={styles.sectionTitle}>{t(language, 'favorite_periods')}</h3>

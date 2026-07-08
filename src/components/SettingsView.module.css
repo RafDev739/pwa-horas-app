@@ -137,6 +137,13 @@
   line-height: 1.4;
 }
 
+.settingRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .langRow {
   display: flex;
   gap: 10px;

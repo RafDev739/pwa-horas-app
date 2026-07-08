@@ -70,9 +70,9 @@
 }
 
 .timeLabelText {
-  font-size: clamp(9px, 2vw, 11px);
-  color: var(--text-tertiary);
-  font-weight: 500;
+  font-size: clamp(12px, 2.8vw, 14px);
+  color: var(--text-secondary);
+  font-weight: 600;
   white-space: nowrap;
   line-height: 1.2;
 }

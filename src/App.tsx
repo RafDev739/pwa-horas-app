@@ -6,6 +6,7 @@ import { WeekdayDetailView } from './components/WeekdayDetailView';
 import { SettingsView } from './components/SettingsView';
 import { AskView } from './components/AskView';
 import { NotificationBanner } from './components/NotificationBanner';
+import { CurrentHourCard } from './components/CurrentHourCard';
 import { useCurrentPeriod } from './hooks/useCurrentPeriod';
 import { useLanguage } from './hooks/useLanguage';
 import { useSettings } from './hooks/useSettings';
@@ -43,6 +44,7 @@ function GridPage({ language, onOpenSettings }: { language: Language; onOpenSett
       <main className={styles.main}>
         <HoraGrid currentPeriod={currentPeriod} language={language} />
         <p className={styles.hint}>{t(language, 'tap_days_hint')}</p>
+        <CurrentHourCard currentPeriod={currentPeriod} language={language} />
       </main>
     </div>
   );
@@ -79,6 +81,10 @@ export default function App() {
   const { settings, setSettings, toggleFavoritePeriod, setTaskPreference, resetSettings } = useSettings();
   const [showSettings, setShowSettings] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | null>(getPermission);
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', settings.theme ?? 'dark');
+  }, [settings.theme]);
 
   useEffect(() => {
     startNotificationPolling();
