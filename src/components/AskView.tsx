@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { t } from '../data/i18n';
-import { scheduleNowNotification } from '../services/notificationService';
+import { DELAY_OPTIONS } from '../services/notificationService';
 import {
   ALL_CATEGORIES,
   CATEGORIES_BY_GROUP,
@@ -52,8 +52,6 @@ function HourBadges({ letters, variant }: HourBadgesProps) {
   );
 }
 
-const DELAY_OPTIONS = [5, 10, 15, 30, 60];
-
 interface ResultsPanelProps {
   title: string;
   description?: string;
@@ -64,24 +62,36 @@ interface ResultsPanelProps {
   notifPermission?: NotificationPermission | null;
   onSetTaskPreference?: (pref: TaskPreference) => void;
   onRequestNotifPermission?: () => void;
-  onNow?: () => void;
 }
 
-function ResultsPanel({ title, description, result, language, category, taskPref, notifPermission, onSetTaskPreference, onRequestNotifPermission, onNow }: ResultsPanelProps) {
+function ResultsPanel({ title, description, result, language, category, taskPref, notifPermission, onSetTaskPreference, onRequestNotifPermission }: ResultsPanelProps) {
   const notifyGood = taskPref?.notifyGood ?? false;
   const notifyBad = taskPref?.notifyBad ?? false;
-  const minutesBefore = taskPref?.minutesBefore ?? 10;
-  const [nowSent, setNowSent] = useState(false);
+  const minutesBefore = taskPref?.minutesBefore ?? 15;
+  const minutesBeforeBad = taskPref?.minutesBeforeBad ?? taskPref?.minutesBefore ?? 15;
 
-  function toggleGood() {
-    onSetTaskPreference!({ notifyGood: !notifyGood, notifyBad, minutesBefore });
+  function handleBellGood() {
+    if (!onSetTaskPreference) return;
+    if (notifPermission !== 'granted') { onRequestNotifPermission?.(); return; }
+    onSetTaskPreference({ notifyGood: !notifyGood, notifyBad, minutesBefore, minutesBeforeBad });
   }
-  function toggleBad() {
-    onSetTaskPreference!({ notifyGood, notifyBad: !notifyBad, minutesBefore });
+  function handleBellBad() {
+    if (!onSetTaskPreference) return;
+    if (notifPermission !== 'granted') { onRequestNotifPermission?.(); return; }
+    onSetTaskPreference({ notifyGood, notifyBad: !notifyBad, minutesBefore, minutesBeforeBad });
   }
-  function setDelay(m: number) {
-    onSetTaskPreference!({ notifyGood, notifyBad, minutesBefore: m });
+  function setDelayGood(m: number) {
+    onSetTaskPreference!({ notifyGood: true, notifyBad, minutesBefore: m, minutesBeforeBad });
   }
+  function setDelayBad(m: number) {
+    onSetTaskPreference!({ notifyGood, notifyBad: true, minutesBefore, minutesBeforeBad: m });
+  }
+
+  function delayLabel(m: number) {
+    return m === 60 ? '1 hr' : `${m} min`;
+  }
+
+  const showControls = !!category && !!onSetTaskPreference;
 
   return (
     <div className={styles.resultsPanel}>
@@ -90,18 +100,62 @@ function ResultsPanel({ title, description, result, language, category, taskPref
 
       {result.good.length > 0 && (
         <div className={styles.resultRow}>
-          <span className={`${styles.resultLabel} ${styles.labelGood}`}>
-            ✅ {t(language, 'ask_good_hours')}
-          </span>
+          <div className={styles.resultRowHeader}>
+            <span className={`${styles.resultLabel} ${styles.labelGood}`}>
+              ✅ {t(language, 'ask_good_hours')}
+            </span>
+            {showControls && (
+              <div className={styles.notifControls}>
+                <button
+                  className={`${styles.bellBtn} ${notifyGood ? styles.bellBtnOn : ''}`}
+                  onClick={handleBellGood}
+                  aria-label={notifyGood ? 'Disable Good Hours notification' : 'Enable Good Hours notification'}
+                >🔔</button>
+                <select
+                  className={styles.delaySelect}
+                  value={minutesBefore}
+                  disabled={!notifyGood}
+                  onChange={e => setDelayGood(Number(e.target.value))}
+                  aria-label="Notification delay for good hours"
+                >
+                  {DELAY_OPTIONS.map(m => (
+                    <option key={m} value={m}>{delayLabel(m)}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
           <HourBadges letters={result.good} variant="good" />
         </div>
       )}
 
       {result.bad.length > 0 && (
         <div className={styles.resultRow}>
-          <span className={`${styles.resultLabel} ${styles.labelBad}`}>
-            ❌ {t(language, 'ask_bad_hours')}
-          </span>
+          <div className={styles.resultRowHeader}>
+            <span className={`${styles.resultLabel} ${styles.labelBad}`}>
+              ❌ {t(language, 'ask_bad_hours')}
+            </span>
+            {showControls && (
+              <div className={styles.notifControls}>
+                <button
+                  className={`${styles.bellBtn} ${notifyBad ? styles.bellBtnOn : ''}`}
+                  onClick={handleBellBad}
+                  aria-label={notifyBad ? 'Disable Hours to Avoid notification' : 'Enable Hours to Avoid notification'}
+                >🔔</button>
+                <select
+                  className={styles.delaySelect}
+                  value={minutesBeforeBad}
+                  disabled={!notifyBad}
+                  onChange={e => setDelayBad(Number(e.target.value))}
+                  aria-label="Notification delay for hours to avoid"
+                >
+                  {DELAY_OPTIONS.map(m => (
+                    <option key={m} value={m}>{delayLabel(m)}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
           <HourBadges letters={result.bad} variant="bad" />
         </div>
       )}
@@ -121,62 +175,6 @@ function ResultsPanel({ title, description, result, language, category, taskPref
             ➖ {t(language, 'ask_neutral_hours')}
           </span>
           <HourBadges letters={result.neutral} variant="neutral" />
-        </div>
-      )}
-
-      {category && (result.good.length > 0 || result.bad.length > 0) && (
-        <div className={styles.notifSection}>
-          <div className={styles.notifSectionHeader}>🔔 {t(language, 'ask_notify_section')}</div>
-          {notifPermission !== 'granted' ? (
-            <button className={styles.notifEnableBtn} onClick={onRequestNotifPermission}>
-              {t(language, 'enable_notifications')}
-            </button>
-          ) : (
-            <>
-              <div className={styles.notifToggles}>
-                {result.good.length > 0 && (
-                  <button
-                    className={`${styles.notifToggleBtn} ${notifyGood ? styles.notifToggleBtnOn : ''}`}
-                    onClick={toggleGood}
-                  >
-                    ✅ {t(language, 'ask_good_hours')}
-                  </button>
-                )}
-                {result.bad.length > 0 && (
-                  <button
-                    className={`${styles.notifToggleBtn} ${notifyBad ? styles.notifToggleBtnOn : ''}`}
-                    onClick={toggleBad}
-                  >
-                    ❌ {t(language, 'ask_bad_hours')}
-                  </button>
-                )}
-              </div>
-              {(notifyGood || notifyBad) && (
-                <div className={styles.delayPicker}>
-                  {DELAY_OPTIONS.map(m => (
-                    <button
-                      key={m}
-                      className={`${styles.delayPill} ${minutesBefore === m ? styles.delayPillActive : ''}`}
-                      onClick={() => setDelay(m)}
-                    >
-                      {m} {t(language, 'minutes')}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <button
-                className={`${styles.nowBtn} ${nowSent ? styles.nowBtnSent : ''}`}
-                disabled={nowSent}
-                onClick={() => {
-                  onNow?.();
-                  setNowSent(true);
-                  setTimeout(() => setNowSent(false), 3000);
-                }}
-              >
-                {nowSent ? t(language, 'notify_now_sent') : `🔔 ${t(language, 'notify_now')}`}
-              </button>
-            </>
-          )}
         </div>
       )}
     </div>
@@ -280,12 +278,6 @@ export function AskView({ language, onOpenSettings, settings, notifPermission, o
                 notifPermission={notifPermission}
                 onSetTaskPreference={(pref) => onSetTaskPreference(selectedCategory, pref)}
                 onRequestNotifPermission={onRequestNotifPermission}
-                onNow={() => scheduleNowNotification(
-                  selectedCategory,
-                  t(language, `${selectedCategory}_task` as TKey),
-                  result,
-                  language
-                )}
               />
             ) : (
               <p className={styles.hint}>{t(language, 'ask_tap_hint')}</p>

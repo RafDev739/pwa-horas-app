@@ -198,32 +198,6 @@ export default {
       return new Response('OK', { status: 200, headers: CORS });
     }
 
-    if (url.pathname === '/schedule-now' && request.method === 'POST') {
-      const { subscription, notification } = await request.json<{ subscription: StoredSub['subscription']; notification: ScheduledNotif }>();
-      const key = 'sub_' + btoa(subscription.endpoint).replace(/[^a-zA-Z0-9]/g, '').slice(-40);
-      const raw = await env.PUSH_STORE.get(key);
-      // Reject if not previously registered via /sync, or if endpoint/keys don't match stored record.
-      // The p256dh and auth keys are only known to the originating browser, so this guards against
-      // notification injection by callers who only know the push endpoint URL.
-      if (!raw) return new Response('Forbidden', { status: 403, headers: CORS });
-      const stored: StoredSub = JSON.parse(raw);
-      if (
-        stored.subscription.endpoint !== subscription.endpoint ||
-        stored.subscription.keys.auth !== subscription.keys.auth ||
-        stored.subscription.keys.p256dh !== subscription.keys.p256dh
-      ) {
-        return new Response('Forbidden', { status: 403, headers: CORS });
-      }
-      // Reject non-relative or protocol-relative URLs in the notification payload
-      if (notification.url && !(notification.url.startsWith('/') && !notification.url.startsWith('//'))) {
-        return new Response('Bad Request', { status: 400, headers: CORS });
-      }
-      const others = stored.notifications.filter((n) => n.id !== notification.id);
-      const updated = [...others, notification].slice(-100); // cap per-subscription storage
-      await env.PUSH_STORE.put(key, JSON.stringify({ ...stored, notifications: updated }));
-      return new Response('OK', { status: 200, headers: CORS });
-    }
-
     if (url.pathname === '/test' && request.method === 'POST') {
       if (request.headers.get('Authorization') !== `Bearer ${env.ADMIN_TOKEN}`) {
         return new Response('Unauthorized', { status: 401 });

@@ -1,8 +1,8 @@
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb';
 import { weeklyGrid } from '../data/grid';
 import { formatTime12Hour } from '../data/timeSlots';
-import { getTimeSlots, getCurrentPeriod } from './horaCalculator';
-import { searchActivity, type ActivitySearchResult } from '../data/activitySearch';
+import { getTimeSlots } from './horaCalculator';
+import { searchActivity } from '../data/activitySearch';
 import type { Settings, HoraLetter, TaskCategory } from '../types';
 
 const WORKER_URL = 'https://horas-push.raf2177act.workers.dev';
@@ -43,6 +43,8 @@ export function getPermission(): NotificationPermission | null {
 }
 
 type ScheduledNotif = { id: string; title: string; body: string; fireAt: number; url?: string };
+
+export const DELAY_OPTIONS = [5, 15, 30, 60] as const;
 
 function buildSchedule(settings: Settings, lang: 'en' | 'es'): ScheduledNotif[] {
   const notifs: ScheduledNotif[] = [];
@@ -95,7 +97,10 @@ function buildSchedule(settings: Settings, lang: 'en' | 'es'): ScheduledNotif[] 
 
         const slot = slots[slotIdx];
         const fireAt = new Date(targetDate);
-        fireAt.setHours(slot.startHour, slot.startMinute - pref.minutesBefore, 0, 0);
+        const delayMin = match.isGood
+          ? (pref.minutesBefore ?? 15)
+          : (pref.minutesBeforeBad ?? pref.minutesBefore ?? 15);
+        fireAt.setHours(slot.startHour, slot.startMinute - delayMin, 0, 0);
         if (fireAt.getTime() < Date.now()) continue;
 
         const timeStr = formatTime12Hour(slot.startHour, slot.startMinute);
@@ -145,61 +150,6 @@ export async function scheduleNotifications(settings: Settings, lang: 'en' | 'es
   } catch { /* ignore */ }
 }
 
-export async function scheduleNowNotification(
-  category: TaskCategory,
-  activityName: string,
-  result: ActivitySearchResult,
-  lang: 'en' | 'es'
-): Promise<void> {
-  if (Notification.permission !== 'granted') return;
-  const { letter } = getCurrentPeriod();
-  const isGood = result.good.includes(letter);
-  const isBad = result.bad.includes(letter);
-  const isMixed = result.mixed.includes(letter);
-
-  let title: string;
-  if (isGood) {
-    title = lang === 'es' ? `✅ Buena Hora para ${activityName}` : `✅ Good Hour for ${activityName}`;
-  } else if (isBad) {
-    title = lang === 'es' ? `⚠️ Hora a Evitar para ${activityName}` : `⚠️ Hour to Avoid for ${activityName}`;
-  } else if (isMixed) {
-    title = lang === 'es' ? `〜 Hora Mixta para ${activityName}` : `〜 Mixed Hour for ${activityName}`;
-  } else {
-    title = `ℹ️ ${activityName}`;
-  }
-
-  const body = lang === 'es'
-    ? `La Hora ${letter} está activa ahora`
-    : `Hour ${letter} is currently active`;
-
-  const notif: ScheduledNotif = {
-    id: `now_${category}`,
-    title,
-    body,
-    fireAt: Date.now() + 2 * 60 * 1000,
-    url: `/period/${letter}`,
-  };
-
-  const database = await getDB();
-  await database.put('scheduled', notif);
-
-  // Also sync to worker so the notification fires even if the app is closed
-  try {
-    if ('serviceWorker' in navigator && 'PushManager' in window) {
-      const reg = await navigator.serviceWorker.ready;
-      const sub = await reg.pushManager.getSubscription();
-      if (sub) {
-        await fetch(`${WORKER_URL}/schedule-now`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ subscription: sub.toJSON(), notification: notif }),
-        });
-      }
-    }
-  } catch {
-    // Background delivery unavailable — foreground polling will still fire it
-  }
-}
 
 export async function scheduleTestNotification(lang: 'en' | 'es') {
   if (Notification.permission !== 'granted') return;

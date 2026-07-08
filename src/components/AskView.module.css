@@ -137,14 +137,67 @@
   margin-bottom: 10px;
 }
 
+.resultRowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  gap: 6px;
+}
+
 .resultLabel {
   display: block;
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  margin-bottom: 6px;
 }
+
+.notifControls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+
+.bellBtn {
+  font-size: 15px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.12);
+  filter: grayscale(0.5) opacity(0.55);
+  transition: background 0.15s, border-color 0.15s, filter 0.15s;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+.bellBtn:active { transform: scale(0.9); }
+.bellBtnOn {
+  background: rgba(233,133,32,0.2);
+  border-color: var(--accent-orange);
+  filter: none;
+}
+
+.delaySelect {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 5px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.07);
+  color: var(--text-on-dark);
+  min-width: 56px;
+  -webkit-appearance: auto;
+  appearance: auto;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+.delaySelect:focus { outline: none; border-color: var(--accent-orange); }
+.delaySelect:disabled { opacity: 0.3; pointer-events: none; }
 .labelGood    { color: #28A745; }
 .labelBad     { color: #DC3545; }
 .labelMixed   { color: #E98520; }
@@ -218,103 +271,3 @@
   padding: 24px 0;
 }
 
-/* Notification controls inside ResultsPanel */
-.notifSection {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255,255,255,0.08);
-}
-
-.notifSectionHeader {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-tertiary);
-  margin-bottom: 8px;
-}
-
-.notifToggles {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.notifEnableBtn {
-  font-size: 12px;
-  font-weight: 600;
-  padding: 6px 14px;
-  border-radius: 20px;
-  border: 1px solid var(--accent-orange);
-  background: transparent;
-  color: var(--accent-orange);
-  cursor: pointer;
-  transition: background 0.15s;
-}
-.notifEnableBtn:hover { background: rgba(233,133,32,0.12); }
-
-.notifToggleBtn {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 5px 11px;
-  border-radius: 20px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: transparent;
-  color: var(--text-secondary);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  cursor: pointer;
-}
-.notifToggleBtn:hover { background: rgba(255,255,255,0.06); }
-
-.notifToggleBtnOn {
-  background: rgba(233,133,32,0.18);
-  border-color: var(--accent-orange);
-  color: var(--accent-orange);
-}
-
-.delayPicker {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
-
-.delayPill {
-  font-size: 11px;
-  font-weight: 600;
-  padding: 4px 9px;
-  border-radius: 16px;
-  border: 1px solid rgba(255,255,255,0.12);
-  background: transparent;
-  color: var(--text-tertiary);
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
-  cursor: pointer;
-}
-.delayPill:hover { background: rgba(255,255,255,0.06); }
-
-.delayPillActive {
-  background: var(--accent-orange);
-  color: white;
-  border-color: var(--accent-orange);
-}
-
-.nowBtn {
-  width: 100%;
-  margin-top: 0.6rem;
-  padding: 0.5rem 1rem;
-  background: var(--accent-orange);
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: background 0.2s, opacity 0.2s;
-}
-.nowBtn:hover:not(:disabled) { opacity: 0.88; }
-.nowBtn:active:not(:disabled) { opacity: 0.75; }
-
-.nowBtnSent {
-  background: #4caf50;
-  cursor: default;
-}

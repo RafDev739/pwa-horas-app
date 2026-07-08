@@ -60,7 +60,8 @@ export type TaskCategory =
 export interface TaskPreference {
   notifyGood: boolean;
   notifyBad: boolean;
-  minutesBefore: number;
+  minutesBefore: number;      // delay for Good Hours notifications
+  minutesBeforeBad?: number;  // delay for Hours to Avoid notifications
 }
 
 export interface Settings {
