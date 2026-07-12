@@ -22,7 +22,7 @@ This is a PWA built with React 18 + Vite + TypeScript. `vite-plugin-pwa` generat
 All domain knowledge lives in `src/data/`:
 
 - **`grid.ts`** — `weeklyGrid[timeSlotIndex][weekdayIndex]` is the 7×7 matrix that maps any (slot, day) pair to a `HoraLetter` (A–G).
-- **`timeSlots.ts`** — two arrays of 7 `TimeSlot` objects: `daylightTimeSlots` and `standardTimeSlots` (offset 1 hour earlier). Slot 6 (G, ~9:34 PM – 1:00 AM) crosses midnight and requires special range logic.
+- **`timeSlots.ts`** — two arrays of 7 `TimeSlot` objects: `daylightTimeSlots` (starts 1:00 AM, DST) and `standardTimeSlots` (starts 12:00 AM, 1 hour earlier). Slot 6 (G) crosses midnight — DST: 9:34 PM – 1:00 AM, standard: 8:34 PM – 12:00 AM — and requires special range logic.
 - **`horaContent.ts`** — full `DetailedHoraContent` for every letter in both languages (`detailedContentEnglish`, `detailedContentSpanish`), plus short `HoraData` summaries (`horaDetailsEnglish`, `horaDetailsSpanish`).
 - **`i18n.ts`** — all UI strings. The `t(lang, key)` function is the single translation call site; `TranslationKey` is a union type that enforces exhaustiveness at compile time. Adding a string requires updating both the union and both `en`/`es` objects.
 - **`activitySearch.ts`** — keyword map (`ACTIVITY_KEYWORDS`) and `searchActivity(category)` for the Ask screen. Maps all 30 `TaskCategory` values to keyword arrays that are matched as case-insensitive substrings against bullet lines in `detailedContentEnglish`. Returns `{ good, bad, mixed, neutral }` arrays of `HoraLetter`. Also exports `CATEGORY_DISPLAY_GROUP`, `CATEGORIES_BY_GROUP`, and `ALL_CATEGORIES` for rendering the category grid. No AI — pure string matching against static data.
@@ -30,6 +30,8 @@ All domain knowledge lives in `src/data/`:
 ### Runtime calculation
 
 `src/services/horaCalculator.ts` is the only place that reads `new Date()`. It selects the correct slot array (DST vs standard via offset comparison), finds the current slot index (handling the midnight-crossing slot), and returns a `CurrentPeriod` object `{ letter, slotIndex, weekdayIndex }`.
+
+`isDaylightSavingTime()` compares Jan vs Jul timezone offsets using `Math.max` (not `Math.min`) — DST offsets are numerically smaller (e.g. UTC-4 = 240 min vs UTC-5 = 300 min), so the current offset not equalling the maximum means we are in DST.
 
 `useCurrentPeriod` (hook) wraps this in a `setInterval` that re-runs every 60 seconds.
 

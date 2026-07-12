@@ -25,7 +25,7 @@ export function WeekdayDetailView({ language }: Props) {
 
   return (
     <div className={styles.container}>
-      <button className={styles.backBtn} onClick={() => navigate(-1)}>
+      <button className={styles.backBtn} onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')}>
         ← {t(language, 'close')}
       </button>
 

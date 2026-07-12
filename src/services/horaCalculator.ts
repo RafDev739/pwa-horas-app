@@ -5,7 +5,7 @@ import type { CurrentPeriod, HoraLetter } from '../types';
 export function isDaylightSavingTime(): boolean {
   const jan = new Date(new Date().getFullYear(), 0, 1).getTimezoneOffset();
   const jul = new Date(new Date().getFullYear(), 6, 1).getTimezoneOffset();
-  return Math.min(jan, jul) !== new Date().getTimezoneOffset();
+  return Math.max(jan, jul) !== new Date().getTimezoneOffset();
 }
 
 export function getTimeSlots() {

@@ -26,7 +26,7 @@ export function HoraDetailView({ language, settings, onToggleFavorite }: Props) 
   return (
     <div className={styles.container}>
       {/* Back */}
-      <button className={styles.backBtn} onClick={() => navigate(-1)}>
+      <button className={styles.backBtn} onClick={() => window.history.length > 1 ? navigate(-1) : navigate('/')}>
         ← {t(language, 'close')}
       </button>
 
